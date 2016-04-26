@@ -1,0 +1,18 @@
+{
+	"db_restore": true,
+	"db_name": "db.db",
+
+	"data": {
+		"adressen": {
+			"url": "http://fidelio.local/sketches/temp/adressen.json",
+			"schedule": "* * 3 * * 3"
+		},
+		"baumkataster": {
+			"path": "baumkataster.json",
+			"schedule": "*/2 * * * * *"
+		}
+	},
+	"data_dir": "data/",
+
+	"server_port": "33333"
+}
