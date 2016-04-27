@@ -12,15 +12,16 @@ init()
 function init() {
 	if (!config.db_restore) {
 		fork('db_init.js').on('message', (m) => {
-			if(m==="done"){
+			if (m === "done") {
 				fork('db_update.js').on('message', (m) => {
-					if(m.status === "success"){
+					console.log("hu: " + m.status)
+					if (m.status === "success") {
 						structure = m.structure
 						schedule()
-						db = new sqlite.Database(config.db_name, sqlite.OPEN_READONLY, function(){
-							server_init()	
+						db = new sqlite.Database(config.db_name, sqlite.OPEN_READONLY, function() {
+							server_init()
 						})
-						
+
 					}
 				})
 			}
@@ -82,26 +83,71 @@ function db_query(req, resolve) {
 
 
 	try {
-		req.query = req.query ? " WHERE " + parseQuery(req.query) : ""
+		req.query = req.query ? " WHERE " + parseQuery(req.query, req.dataset) : ""
 	} catch (e) {
-		resolve({status: 400, response: {error: "invalid query"}})
+		resolve({
+			status: 400,
+			response: {
+				error: "invalid query",
+				msg: e
+			}
+		})
 		return
 	}
 
+	try {
+		req.sortby = req.sortby ? " ORDER BY " + validateQuery(req.sortby, req.dataset) : ""
+	} catch (e) {
+		resolve({
+			status: 400,
+			response: {
+				error: "invalid query",
+				msg: e
+			}
+		})
+		return
+	}
 
+	try {
+		req.filter = validateFilter(req.filter, req.dataset)
+	} catch (e) {
+		resolve({
+			status: 400,
+			response: {
+				error: "invalid query",
+				msg: e
+			}
+		})
+		return
+	}
+
+	console.log(req.filter)
 
 	db.spatialite(function(err) {
-		console.log("SELECT AsGeoJSON(_where_coord) as geometry, * FROM " + req.dataset + req.query)
-		db.all("SELECT AsGeoJSON(_where_coord) as geometry, * FROM " + req.dataset + req.query, function(err, res) {
+		db.all("SELECT AsGeoJSON(_where_coord) as geometry, " + req.filter + " FROM " + req.dataset + req.query + req.sortby, function(err, res) {
 			if (err) {
 				resolve({
 					status: 500,
 					response: err
 				})
 			} else {
+				var geojson = {
+					"name": req.dataset,
+					"type": "FeatureCollection",
+					"features": []
+				}
+				res.forEach(function(feature) {
+					geojson.features.push({
+						"type":"Feature",
+						"geometry": JSON.parse(feature.geometry),
+						"properties": feature
+					})
+					delete geojson.features[geojson.features.length-1].properties.geometry
+				})
+
 				resolve({
 					status: 201,
-					response: res
+					response: geojson
 				})
 			}
 		})
@@ -109,7 +155,7 @@ function db_query(req, resolve) {
 
 }
 
-function parseQuery(a) {
+function parseQuery(a, dataset) {
 	var as = a.split("&")
 	as.forEach(function(b, bi) {
 		var bs = b.split("|")
@@ -118,10 +164,12 @@ function parseQuery(a) {
 			cs.forEach(function(d, di) {
 				var ds = d.split(")")
 				ds.forEach(function(e, ei) {
-					if(!e){
-						ds[ei]=''
+					if (!e) {
+						ds[ei] = ''
 					} else {
 						var es = e.split(/(<=|>=|<|>|!=|=)/)
+						if (Object.keys(structure[dataset]).indexOf(es[0].trim()) == -1)
+							throw "Error: property '" + es[0].trim() + "' doesn't exist"
 						ds[ei] = '`' + es[0].trim() + '` ' + es[1] + ' "' + es[2].trim() + '"'
 					}
 				})
@@ -132,6 +180,29 @@ function parseQuery(a) {
 		as[bi] = bs.join(" OR ")
 	})
 	return as.join(" AND ")
+}
+
+function validateQuery(sortby, dataset) {
+	if (Object.keys(structure[dataset]).indexOf(sortby.trim()) == -1)
+		throw "Error: sort by property '" + sortby.trim() + "' doesn't exist"
+
+	return "`" + sortby.trim() + "`"
+}
+
+function validateFilter(f, dataset) {
+	if (f) {
+		var filter = ""
+		f.split(",").forEach(function(property) {
+			if (Object.keys(structure[dataset]).indexOf(property.trim()) == -1)
+				throw "Error: filter property '" + property.trim() + "' doesn't exist"
+			if (filter)
+				filter += ", "
+			filter += property
+		})
+		return filter
+	} else {
+		return Object.keys(structure[dataset]).join(", ")
+	}
 }
 
 function schedule() {
