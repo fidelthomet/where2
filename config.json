@@ -1,5 +1,5 @@
 {
-	"db_restore": true,
+	"db_restore": false,
 	"db_name": "db.db",
 
 	"data": {

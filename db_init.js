@@ -8,7 +8,7 @@ fs.unlink(config.db_name, function(){
 	
 	db.spatialite(function(err) {
 		db.run("SELECT InitSpatialMetaData()", function() {
-
+			process.send("done")
 		})
 	})
 })

@@ -1,42 +1,29 @@
-var exec = require('child_process').exec,
+var fork = require('child_process').fork,
 	cron = require('node-cron'),
 	restify = require('restify'),
 	sqlite = require('spatialite')
 
 var config = require('./config.json')
 
-var db
+var db, structure
 
 init()
 
 function init() {
 	if (!config.db_restore) {
-
-		var db_init = exec('node db_init.js', function(err, stdout, stderr) {
-			if (err) {
-				console.log(err.stack)
-				console.log('Error code: ' + err.code)
-				console.log('Signal received: ' + err.signal)
+		fork('db_init.js').on('message', (m) => {
+			if(m==="done"){
+				fork('db_update.js').on('message', (m) => {
+					if(m.status === "success"){
+						structure = m.structure
+						schedule()
+						db = new sqlite.Database(config.db_name, sqlite.OPEN_READONLY, function(){
+							server_init()	
+						})
+						
+					}
+				})
 			}
-			if (stderr)
-				console.log('STDERR: ' + stderr)
-
-		}).on('exit', function(err) {
-			if (err) throw err
-
-			var db_init = exec('node db_update.js', {
-				env: {
-					data: JSON.stringify(Object.keys(config.data))
-				}
-			}, function(error, stdout, stderr) {
-				console.log('STDERR: ' + stderr)
-				console.log('STDOUT: ' + stdout)
-			}).on('exit', function(err) {
-				console.log("done")
-				schedule()
-				server_init()
-				db = new sqlite.Database(config.db_name)
-			})
 		})
 	} else {
 		schedule()
@@ -92,21 +79,20 @@ function server_handle(req, res) {
 }
 
 function db_query(req, resolve) {
-	var where = ""
 
-	if (req.properties !== undefined) {
-		Object.keys(req.properties).forEach(function(key) {
-			if (!where)
-				where += " WHERE "
-			else
-				where += ", "
-			where += key + " = '" + req.properties[key] + "'"
-		})
+
+	try {
+		req.query = req.query ? " WHERE " + parseQuery(req.query) : ""
+	} catch (e) {
+		resolve({status: 400, response: {error: "invalid query"}})
+		return
 	}
 
+
+
 	db.spatialite(function(err) {
-		console.log("SELECT AsGeoJSON(_where_coord) as geometry, * FROM " + req.dataset + where)
-		db.all("SELECT AsGeoJSON(_where_coord) as geometry, * FROM " + req.dataset + where, function(err, res) {
+		console.log("SELECT AsGeoJSON(_where_coord) as geometry, * FROM " + req.dataset + req.query)
+		db.all("SELECT AsGeoJSON(_where_coord) as geometry, * FROM " + req.dataset + req.query, function(err, res) {
 			if (err) {
 				resolve({
 					status: 500,
@@ -121,6 +107,31 @@ function db_query(req, resolve) {
 		})
 	})
 
+}
+
+function parseQuery(a) {
+	var as = a.split("&")
+	as.forEach(function(b, bi) {
+		var bs = b.split("|")
+		bs.forEach(function(c, ci) {
+			var cs = c.split("(")
+			cs.forEach(function(d, di) {
+				var ds = d.split(")")
+				ds.forEach(function(e, ei) {
+					if(!e){
+						ds[ei]=''
+					} else {
+						var es = e.split(/(<=|>=|<|>|!=|=)/)
+						ds[ei] = '`' + es[0].trim() + '` ' + es[1] + ' "' + es[2].trim() + '"'
+					}
+				})
+				cs[di] = ds.join(" ) ")
+			})
+			bs[ci] = cs.join(" ( ")
+		})
+		as[bi] = bs.join(" OR ")
+	})
+	return as.join(" AND ")
 }
 
 function schedule() {

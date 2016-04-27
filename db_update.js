@@ -5,13 +5,16 @@ var sqlite = require('spatialite'),
 var config = require('./config.json')
 
 var datasets = process.env.data ? JSON.parse(process.env.data) : Object.keys(config.data),
-	db = new sqlite.Database(config.db_name)
+	db = new sqlite.Database(config.db_name),
+	struc = {}
 
 initData(0)
 
 function initData(index) {
-	if (index >= datasets.length)
+	if (index >= datasets.length){
+		process.send({status:"success", structure:struc})
 		return
+	}
 
 	var set = config.data[datasets[index]]
 
@@ -30,8 +33,7 @@ function initData(index) {
 
 function initTable(index, set, data) {
 	var set_name = datasets[index]
-	console.log(set_name)
-
+	
 	// table structure (autodetect if undefined)
 	var structure = {}
 	if (set.structure) {
@@ -47,6 +49,8 @@ function initTable(index, set, data) {
 				structure[key] = "BOOL"
 		})
 	}
+
+	struc[set_name]=structure
 
 	var query_createTable = ""
 	Object.keys(structure).forEach(function(key) {
