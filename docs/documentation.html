@@ -1,0 +1,135 @@
+<h1 id="section-Overview">
+	Overview
+</h1>
+This API allows you to perform spatial and property-based queries on spatial data and returns <a href="http://geojson.org">GeoJSON</a>.
+<br><br>
+All API requests are performed by sending your query as JSON to <code>localhost:33333/</code>. Requests can be performed using either <code>GET</code> or <code>POST</code>. Using <code>POST</code> allows you to send the JSON as request body, while <code>POST</code> requires you to <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent">URI encode</a> the JSON and append it to <code>localhost:33333/</code>.
+<br><br>
+
+<h1 id="section-JSON">JSON structure</h1>
+<pre>{
+	"<a href="#section-dataset">dataset</a>": …,
+	"<a href="#section-query">query</a>": …,
+	"<a href="#section-spatial">spatial</a>": …,
+	"<a href="#section-properties">properties</a>": …,
+	"<a href="#section-distance">distance</a>": …,
+	"<a href="#section-sort">sort</a>": …,
+	"<a href="#section-limit">limit</a>": …,
+	"<a href="#section-offset">offset</a>": …,
+}</pre>
+
+<h1 id="section-dataset">dataset : String (required)</h1>
+Name of the dataset you want to perform the query on. If you do not pass any other arguments a JSON-file representing the full dataset will be returned.
+<br><br>
+example:
+<pre>dataset: "addresses"</pre>
+
+<h1 id="section-query">query : Object</h1>
+Property-based query: Object containing property (<code>prop</code>, String), operator (<code>op</code>, String), value (<code>val</code>, String / Number) and optionally case-sensitivity (<code>c</code>, Boolean, default is <code>false</code>).
+<br><br>
+available operators:
+<table>
+	<tr><th>Operator</th><th>Description</th></tr>
+	<tr><td>=</td><td>Equal</td></tr>
+	<tr><td>!=</td><td>Not equal</td></tr>
+	<tr><td><</td><td>Less than</td></tr>
+	<tr><td>></td><td>More than</td></tr>
+	<tr><td><=</td><td>Less than or equal</td></tr>
+	<tr><td>>=</td><td>More than or equal</td></tr>
+	<tr><td>$</td><td>contains</td></tr>
+	<tr><td>!$</td><td>Does not contain</td></tr>
+	<tr><td>$=</td><td>starts with</td></tr>
+	<tr><td>!$=</td><td>Does not start with</td></tr>
+	<tr><td>=$</td><td>ends with</td></tr>
+	<tr><td>!=$</td><td>Does not end with</td></tr>
+</table>
+<br>
+Use Arrays to query multiple relations using <code>and</code> or <code>or</code>.
+<br><br>
+example:
+<pre>query: {
+	"and": [{
+		"prop": "age",
+		"op": "<=",
+		"val": "25"
+	}, {
+	"or": [{
+			"prop": "name",
+			"op": "=",
+			"val": "Jane Doe"
+		}, {
+			"prop": "name",
+			"op": "=",
+			"val": "John Doe"
+		}]
+	}]
+}</pre>
+<br><br>
+
+<h1 id="section-spatial">spatial : Object</h1>
+Spatial query: Object containing spatial relation (<code>relation</code>, String), geometry (<code>geometry</code>, String (WKT) or Object (GeoJSON-Feature), supported feature types: Point, LineString, Polygon) and distance (<code>distance</code>, Number, only for relation <code>"DistWithin"</code>).<br/><br/>
+available relations:
+<table>
+	<tr><th>Relation</th><th>Description</th></tr>
+	<tr><td>Equals</td><td>TRUE if queried geometry (g1) and supplied geometry (g2) are equal</td></tr>
+	<tr><td>Disjoint</td><td>TRUE if the intersection of g1 and g2 is the empty set</td></tr>
+	<tr><td>Touches</td><td>TRUE if the only Points in common between g1 and g2 lie in the union of the boundaries of g1 and g2</td></tr>
+	<tr><td>Within</td><td>TRUE if g1 is completely contained in g2</td></tr>
+	<tr><td>Overlaps</td><td>TRUE if the intersection of g1 and g2 results in a value of the same dimension as g1 and g2 that is different from both g1 and g2</td></tr>
+	<tr><td>Crosses</td><td>TRUE if the intersection of g1 and g2 results in a value whose dimension is less than the maximum dimension of g1 and g2 and the intersection value includes Points interior to both g1 and g2, and the intersection value is not equal to either g1 or g2</td></tr>
+	<tr><td>Intersects</td><td>TRUE if the intersection of g1 and g2 is not empty</td></tr>
+	<tr><td>Contains</td><td>TRUE if g2 is completely contained in g1</td></tr>
+	<tr><td>DistWithin</td><td>TRUE if g2 is within supplied distance of g1</td></tr>
+</table>
+<br>
+example:
+<pre>spatial: {
+	"relation": "within",
+	"geometry": {
+	"type": "Polygon",
+		"coordinates": [
+			[
+				[8.522214889526367, 47.39189986655709],
+				[8.522214889526367, 47.41112933122305],
+				[8.545131683349610, 47.41112933122305],
+				[8.522214889526367, 47.39189986655709]
+			]
+		]
+	}
+}</pre>
+<br><br>
+
+<h1 id="section-properties">properties : Array</h1>
+Specify which properties will be returned. This may be used to reduce the size of the response. If not specified all properties will be returned.<br/><br/>
+example:
+<pre>properties: ["city", "district", "street"]</pre>
+<br><br>
+
+<h1 id="section-distance">distance : String (WKT) or Object (GeoJSON Feature)</h1>
+Calculates distance to specified geometry and returns it as property <code>where_distance</code>. This allows you to sort the result according to distance. For performance reasons it is recommended to only use this on small datasets or subsets.
+<br><br>
+example:
+<pre>distance: "POINT (13.467375 52.483492)"</pre>
+<br><br>
+
+<h1 id="section-sort">sort : Object</h1>
+Sorts results by specified property (<code>by</code>, String, property name) in ascending or descending order (<code>desc</code>, Boolean, default is <code>false</code>).
+<br><br>
+example:
+<pre>sort: {
+	by: "city",
+	desc: true
+}</pre>
+<br><br>
+
+<h1 id="section-limit">limit : Number</h1>
+Sets maximum number of returned features<br><br>
+example:
+<pre>limit: 50</pre>
+<br><br>
+
+<h1 id="section-offset">offset : Number</h1>
+Sets offset for returned features<br><br>
+example:
+<pre>offset: 50</pre>
+<br>

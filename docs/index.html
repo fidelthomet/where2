@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<style type="text/css">{{css}}</style>
+	<link href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAABKxJREFUeAHtWk2IHEUUfm8yC4bgVVhh3YOQDXj0IhLFn5NiSEBBox7MbHLSCNGTp8xB40kENULI7nqRBMFAEiU5aYIGQcGbi7sqiEYT8CYRoyZs+X090+xk7Jl63fO6F0kV9E511ffe997X9dezI5JKUiApkBRICiQFkgJJgaTAzamANpV2txtax36We8G3S4PcLSq3o86L5ZIEuRRUvkb95NN3yBfdrq5lPTX/qV2AB7rhlss/yYtB5GXkcpsxn98Q2BvTs/LW+a7+ZbSpBKtVgG2d8PhakDcR2Uyl6EQutlQOrCzpiYr2UbNWFFEBEELQrZ3wGpL/EOZVkyfzDH3QF31WCCVq4u6UgW7ryHEM+Sej7CUACPSDlSXZrYoVxLG4j4C5eXnVO3nmS5/07Zh75sp1BPTnPId9bQVrwhOea4LbCOBq31/wakuejslBLi8SNwG41SGoSRY8a04zfS4rfizORQAecjBHuc9bSsAh6Ghb5J6pzXIrL9bZBmPTAkcuclrIYhiXNQDb1HaE/nmUTOWytOTZ1QX9tAg7tzc8JGvyfggyXdR/Q5vKfd8t6YUb2ircuKgI3l0G7jAuedpnwkAgVC0jwcIZDctFgOxsH6NSWRj15AdNMwywg21FdRNnkeFQm4sAmL/5S82Q+/XbdpDF9bvxNRPWwDmepdfrI8D6W91ITt0syyM7hzqM2KjoQ24Lb70EKHT+f2j0EuDXWLLhqtwVw+T9JmyQX3L8JJ8uAmDJ/jIWxHWV+Rgm77dg8W74VY6f5NNFAKzI56NBBNmb7fMRYIYBNgLDjirnYhhLv4sA7ZacUpVrEULlIWecCPlBCH7GHtDItUnldITP1D2WyOShD8Jp8CMcXx4z2PAovMCtLl/tOeezYd978vGYVD7GKXCHgSsKwTHcp+Bl4Ai+xbQIoBBq33WRfXJ1gNty9uvDyTVgOVHVZQowgqdm5QyG5o8TRWMwJge5DFATJD7cTG56IEyD5/F03ylhUh6q8gKG/+HyhsUWbiOA7u/cgjO8+uzPheHCd8ZR2Fmt0VWAs2/r3xDg9WqhGKzgO+MwQK0QVwFIOjVT0yjA0898WzMz4twFWO7qPzgYHTLym2H0Sd9mAyPQXQDyTs/KUayuK8YYojD6os8osALAdRcY5MeO8Ah2BJ/tSuVRrPxnB/171WsZAQyOAWPP9gj6TF3JM87aBKBzlAM8t/eq5f/SFtdL5S3tFrUKsLqkq0ig8sGItvRhT6c8slYBGA6+4j5Y6XCEbS+zLZ9TKYvaBcATvAIB9peKimDYZLalDcsZ1LYLDIcxtyecxAvfzuH2onsEdWr1PXX53r/I/2Bb7SMgJ8O/wPZjTv+R34/6JIbYUf3e7Y0J8M27ehHJvRJLgBhiYziv/samAAPOfj0yL59hcdtelACSv7CyKPd7/wqkiCtva2wEkJCJtaakg0T/zAPIP9nWVtnTZPLkblQAEn57RL/HEfm/UwFty4v6AzFNlkanQJ5Yfyp8gqnwINvw9M9h6D/c9NMnd+MjoJewhnZbnsNe/zsv1jciecayoWWuE57htaFBJPKkQFIgKZAUSAokBZICSYGbVIF/AbQqM1TlDR0tAAAAAElFTkSuQmCC" rel="icon" type="image/png" />
+	<link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" rel="stylesheet">
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js"></script>
+	<!-- <script type="text/javascript" src="leaflet-plugins.js"></script>
+	<script type="text/javascript" src="d3.js"></script> -->
+	<script type="text/javascript">{{libs}}</script>
+	<!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script> -->
+	{{script}}
+</head>
+<body>
+	<header></header>
+	<div id="content">
+		<div id="description"></div>
+		<br>
+		
+		<div class="selection">
+			<span id="sel-datasets" class="blue selected">Datasets</span> | <span id="sel-documentation" class="blue">Documentation</span> | <span id="sel-query-builder" class="blue">Query-Builder</span>
+		</div><br>
+
+		<div id="datasets" class="view"></div>
+		<div id="documentation" class="view">{{documentation}}</div>
+		<div id="query-builder" class="view">
+			dataset: <select id="opt-dataset"></select>
+			<br><br>
+			<div id="container-query">
+				<label><input type="checkbox" id="cb-query" class="cb"> query: </label>
+				<div>
+					<select class="opt-properties in-query" disabled></select>
+					<select id="query-operator" class="in-query" disabled><option>=</option><option>!=</option><option><</option><option>></option><option><=</option><option>>=</option><option>$</option><option>!$</option><option>$=</option><option>!$=</option><option>=$</option><option>!=$</option></select>
+					<input id="query-value" type="text" class="in-query" disabled placeholder="value"></input>
+				</div>
+			</div>
+			<br>
+			<label><input type="checkbox" id="cb-spatial" class="cb"> spatial: </label>
+			<select class="opt-spatial in-spatial" disabled>
+				<option value="Equals">Equals</option>
+				<option value="Disjoint">Disjoint</option>
+				<option value="Touches">Touches</option>
+				<option value="Within" selected>Within</option>
+				<option value="Overlaps">Overlaps</option>
+				<option value="Crosses">Crosses</option>
+				<option value="Intersects">Intersects</option>
+				<option value="Contains">Contains</option>
+				<option value="DistWithin">DistWithin</option>
+			</select><input class="in-spatial" type="text" placeholder="meter" disabled><br>
+			<div id="map1"></div>
+			<br>
+			<label><input type="checkbox" id="cb-properties" class="cb" checked> properties: </label><div id="container-properties"></div>
+			<br><br>
+			<label><input type="checkbox" id="cb-sort" class="cb"> sort: </label><select disabled class="opt-properties in-sort"></select><label><input class="in-sort" type="checkbox" id="cb-desc" disabled>descending</label>
+			<br>
+			<label><input type="checkbox" id="cb-limit" class="cb" checked> limit: </label><input class="in-limit" type="text" value="50"></input>
+			<br>
+			<label><input type="checkbox" id="cb-offset" class="cb"> offset: </label><input class="in-offset" type="text" disabled></input>
+			<br><br>
+			<button id="send">send</button>
+			<br><br>
+			<div id="map2"></div>
+			<br>
+			<div id="request">
+				Request URL:<br>
+				<a id="req_URL"></a><br><br>
+				Request Body:
+				<pre id="req_body"></pre><br>
+				Response:
+				<pre id="res_body"></pre><br>
+			</div>
+		</div>
+	</div>
+	<footer>powered by Where2</footer>
+</body>
+</html>

@@ -1,47 +1,109 @@
 var fork = require('child_process').fork,
 	cron = require('node-cron'),
 	restify = require('restify'),
-	sqlite = require('spatialite')
+	sqlite = require('spatialite'),
+	docs = require('./docs/docs.js'),
 
-var config = require('./config.json')
+	config = require('./config.json')
 
-var db, structure
+var db, structure = {}
 
-init()
+create_db()
 
-function init() {
-	if (!config.db_restore) {
-		fork('db_init.js').on('message', (m) => {
-			if (m === "done") {
-				fork('db_update.js').on('message', (m) => {
-					console.log("hu: " + m.status)
-					if (m.status === "success") {
-						structure = m.structure
-						schedule()
-						db = new sqlite.Database(config.db_name, sqlite.OPEN_READONLY, function() {
-							server_init()
-						})
-
-					}
-				})
-			}
-		})
-	} else {
-		schedule()
-		server_init()
-		db = new sqlite.Database(config.db_name)
-	}
+function create_db() {
+	fork('db/db_init.js').on('message', (m) => {
+		if (m === "done") {
+			create_table(0)
+		}
+	})
 }
 
-function server_init() {
+function create_table(i) {
+	if (i === config.data.length) {
+		schedule()
+		init_db()
+		return
+	}
+	var opt = {
+			db_name: config.db_name,
+			data_dir: config.data_dir,
+			dataset: config.data[i]
+		}
+	fork('db/db_update.js', [JSON.stringify(opt)]).on('message', (m) => {
+		structure[m.dataset] = m.schema
+		console.log(m.dataset + " created at " + new Date().toISOString())
+		create_table(i + 1)
+	})
+}
+
+function init_db() {
+	db = new sqlite.Database(config.db_name, sqlite.OPEN_READONLY, function() {
+		init_server()
+	})
+}
+
+function init_server() {
 	var server = restify.createServer()
 
-	server.get('/:query', function(req, res) {
+	server.use(restify.CORS())
+
+	restify.CORS.ALLOW_HEADERS.push("authorization")
+	restify.CORS.ALLOW_HEADERS.push("withcredentials")
+	restify.CORS.ALLOW_HEADERS.push("x-requested-with")
+	restify.CORS.ALLOW_HEADERS.push("x-forwarded-for")
+	restify.CORS.ALLOW_HEADERS.push("x-real-ip")
+	restify.CORS.ALLOW_HEADERS.push("x-customheader")
+	restify.CORS.ALLOW_HEADERS.push("user-agent")
+	restify.CORS.ALLOW_HEADERS.push("keep-alive")
+	restify.CORS.ALLOW_HEADERS.push("host")
+	restify.CORS.ALLOW_HEADERS.push("accept")
+	restify.CORS.ALLOW_HEADERS.push("connection")
+	restify.CORS.ALLOW_HEADERS.push("upgrade")
+	restify.CORS.ALLOW_HEADERS.push("content-type")
+	restify.CORS.ALLOW_HEADERS.push("dnt") // Do not track
+	restify.CORS.ALLOW_HEADERS.push("if-modified-since")
+	restify.CORS.ALLOW_HEADERS.push("cache-control")
+
+	server.on("MethodNotAllowed", function(request, response) {
+		if (request.method.toUpperCase() === "OPTIONS") {
+			response.header("Access-Control-Allow-Credentials", true)
+			response.header("Access-Control-Allow-Headers", restify.CORS.ALLOW_HEADERS.join(", "))
+			response.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			response.header("Access-Control-Allow-Origin", request.headers.origin)
+			response.header("Access-Control-Max-Age", 0)
+			response.header("Content-type", "text/plain charset=UTF-8")
+			response.header("Content-length", 0)
+			response.send(204)
+		} else {
+			response.send(new restify.MethodNotAllowedError())
+		}
+	})
+
+	server.get('/:query', (req, res) => {
 		if (!req.params.query) {
-			res.send("documentation")
+			res.contentType = 'text/html';
+			res.header('Content-Type', 'text/html');
+			res.end(docs.docs(structure, config.docs, config.url))
 		} else {
 			try {
-				server_handle(JSON.parse(req.params.query), res)
+				prepare_query(JSON.parse(req.params.query), res)
+			} catch (e) {
+				res.send(400, {
+					error: 'malformed request'
+				})
+			}
+
+		}
+	})
+
+	server.use(restify.bodyParser())
+	server.post('/', (req, res) => {
+		if (!Object.keys(req.params).length === 0) {
+			res.send(docs.docs(structure, config.docs, config.url))
+		} else {
+
+			try {
+				prepare_query(req.params, res)
 			} catch (e) {
 				res.send(400, {
 					error: 'malformed request'
@@ -56,7 +118,7 @@ function server_init() {
 	})
 }
 
-function server_handle(req, res) {
+function prepare_query(req, res) {
 	if (!req.dataset) {
 		res.send(400, {
 			error: 'missing parameter \'dataset\'',
@@ -64,10 +126,10 @@ function server_handle(req, res) {
 		})
 		return
 	}
-	if (Object.keys(config.data).indexOf(req.dataset) == -1) {
+	if (Object.keys(structure).indexOf(req.dataset) == -1) {
 		res.send(404, {
 			error: 'dataset \'' + req.dataset + "\' does not exist",
-			'avaiable datasets': Object.keys(config.data)
+			'avaiable datasets': Object.keys(structure)
 		})
 		return
 	}
@@ -80,10 +142,21 @@ function server_handle(req, res) {
 }
 
 function db_query(req, resolve) {
-
-
+	var query = "SELECT AsGeoJSON(_where_geom) as geometry, "
 	try {
-		req.query = req.query ? " WHERE " + parseQuery(req.query, req.dataset) : ""
+		query += parseProperties(req.properties, req.dataset)
+		query += req.distance ? parseDistance(req.distance, "where_distance") : ""
+		query += (req.spatial && req.spatial.relation.toLowerCase() === "distwithin") ? parseDistance(req.spatial.geometry, "where_distance_temp") : ""
+		query += " FROM "
+		query += req.dataset
+		query += req.query ? " WHERE (" + parseQuery(req.query, req.dataset) + ")" : ""
+		query += req.spatial ? (req.query ? " AND " : " WHERE ") + parseSpatial(req.spatial, req.dataset) : ""
+
+		query += req.sort ? " ORDER BY " + parseSort(req.sort, req.dataset) : ""
+		query += req.limit ? " LIMIT " + validateNumeric(req.limit, "limit") : ""
+		query += req.offset ? " OFFSET " + validateNumeric(req.offset, "offset") : ""
+
+
 	} catch (e) {
 		resolve({
 			status: 400,
@@ -94,37 +167,9 @@ function db_query(req, resolve) {
 		})
 		return
 	}
-
-	try {
-		req.sortby = req.sortby ? " ORDER BY " + validateQuery(req.sortby, req.dataset) : ""
-	} catch (e) {
-		resolve({
-			status: 400,
-			response: {
-				error: "invalid query",
-				msg: e
-			}
-		})
-		return
-	}
-
-	try {
-		req.filter = validateFilter(req.filter, req.dataset)
-	} catch (e) {
-		resolve({
-			status: 400,
-			response: {
-				error: "invalid query",
-				msg: e
-			}
-		})
-		return
-	}
-
-	console.log(req.filter)
 
 	db.spatialite(function(err) {
-		db.all("SELECT AsGeoJSON(_where_coord) as geometry, " + req.filter + " FROM " + req.dataset + req.query + req.sortby, function(err, res) {
+		db.all(query, function(err, res) {
 			if (err) {
 				resolve({
 					status: 500,
@@ -137,14 +182,14 @@ function db_query(req, resolve) {
 					"features": []
 				}
 				res.forEach(function(feature) {
+					delete feature.where_distance_temp
 					geojson.features.push({
-						"type":"Feature",
+						"type": "Feature",
 						"geometry": JSON.parse(feature.geometry),
 						"properties": feature
 					})
-					delete geojson.features[geojson.features.length-1].properties.geometry
+					delete geojson.features[geojson.features.length - 1].properties.geometry
 				})
-
 				resolve({
 					status: 201,
 					response: geojson
@@ -152,74 +197,141 @@ function db_query(req, resolve) {
 			}
 		})
 	})
-
 }
 
-function parseQuery(a, dataset) {
-	var as = a.split("&")
-	as.forEach(function(b, bi) {
-		var bs = b.split("|")
-		bs.forEach(function(c, ci) {
-			var cs = c.split("(")
-			cs.forEach(function(d, di) {
-				var ds = d.split(")")
-				ds.forEach(function(e, ei) {
-					if (!e) {
-						ds[ei] = ''
-					} else {
-						var es = e.split(/(<=|>=|<|>|!=|=)/)
-						if (Object.keys(structure[dataset]).indexOf(es[0].trim()) == -1)
-							throw "Error: property '" + es[0].trim() + "' doesn't exist"
-						ds[ei] = '`' + es[0].trim() + '` ' + es[1] + ' "' + es[2].trim() + '"'
-					}
-				})
-				cs[di] = ds.join(" ) ")
-			})
-			bs[ci] = cs.join(" ( ")
-		})
-		as[bi] = bs.join(" OR ")
-	})
-	return as.join(" AND ")
-}
-
-function validateQuery(sortby, dataset) {
-	if (Object.keys(structure[dataset]).indexOf(sortby.trim()) == -1)
-		throw "Error: sort by property '" + sortby.trim() + "' doesn't exist"
-
-	return "`" + sortby.trim() + "`"
-}
-
-function validateFilter(f, dataset) {
-	if (f) {
-		var filter = ""
-		f.split(",").forEach(function(property) {
-			if (Object.keys(structure[dataset]).indexOf(property.trim()) == -1)
-				throw "Error: filter property '" + property.trim() + "' doesn't exist"
-			if (filter)
-				filter += ", "
-			filter += property
-		})
-		return filter
+function parseQuery(a) {
+	if (a.and) {
+		return "(" + a.and.map(parseQuery).join(" AND ") + ")"
+	} else if (a.or) {
+		return "(" + a.or.map(parseQuery).join(" OR ") + ")"
 	} else {
-		return Object.keys(structure[dataset]).join(", ")
+
+		var prop = '`' + a.prop + '`'
+		var val = a.val
+		var op = a.op ? a.op : '='
+		var c = typeof a.val === 'string' && !a.c ? true : false
+
+		switch (op) {
+			case "$":
+				op = "LIKE"
+				val = "%" + val + "%"
+				break
+			case "!$":
+				op = "NOT LIKE"
+				val = "%" + val + "%"
+				break
+			case "$=":
+				op = "LIKE"
+				val = "%" + val
+				break
+			case "!$=":
+				op = "NOT LIKE"
+				val = "%" + val
+				break
+			case "=$":
+				op = "LIKE"
+				val = val + "%"
+				break
+			case "!=$":
+				op = "NOT LIKE"
+				val = val + "%"
+				break
+			case ">":
+			case "<":
+			case ">=":
+			case "<=":
+			case "=":
+			case "!=":
+				break
+			default:
+				throw "Error: " + op + " is not a valid Operator"
+		}
+
+		val = typeof val === 'string' ? '"' + val + '"' : val
+
+		if (c) {
+			prop = "LOWER(" + prop + ")"
+			val = "LOWER(" + val + ")"
+		}
+
+		var q = [prop, op, val].join(' ')
+
+		return q
 	}
 }
 
-function schedule() {
-	console.log("schedule")
-		// cron.schedule('0 * * * *', function() {
-		// 	var ls = exec('node index.js', function(error, stdout, stderr) {
-		// 		if (error) {
-		// 			console.log(error.stack);
-		// 			console.log('Error code: ' + error.code);
-		// 			console.log('Signal received: ' + error.signal);
-		// 		}
-		// 		console.log('STDOUT: ' + stdout);
-		// 		console.log('STDERR: ' + stderr);
-		// 	})
+function parseSpatial(s, dataset) {
+	if (s.relation.toLowerCase() == 'distwithin') {
+		var spatial = ["(`where_distance_temp` < " + s.distance + ") AND ROWID IN (SELECT ROWID FROM SpatialIndex WHERE f_table_name = '" + dataset + "' AND search_frame = BuildMbr(MbrMinX(BUFFER(", ")),MbrMinY(BUFFER(", ")),MbrMaxX(BUFFER(", ")),MbrMaxY(BUFFER(", ")), 4326))"]
+		if (typeof s.geometry === "string")
+			return spatial.join("GeomFromText('" + s.geometry + "')," + (s.distance * 0.0000090053))
+		else
+			return spatial.join("GeomFromGeoJSON('" + JSON.stringify(s.geometry) + "')," + (s.distance * 0.0000090053))
+	}
 
-	// 	ls.on('exit', function(code) {
-	// 		console.log('Exit at ' + new Date().toISOString());
-	// 	})
-	// })
+	var spatial = [" AND ROWID IN (SELECT ROWID FROM SpatialIndex WHERE f_table_name = '" + dataset + "' AND search_frame = BuildMbr(MbrMinX(", "),MbrMinY(", "),MbrMaxX(", "),MbrMaxY(", "), 4326))"]
+
+	if (['equals', 'disjoint', 'touches', 'within', 'overlaps', 'crosses', 'intersects', 'contains', 'covers', 'coveredby'].indexOf(s.relation.toLowerCase()) === -1)
+		throw "Error: " + s.relation + " is not a valid spatial relationship function"
+
+	if (typeof s.geometry === "string")
+		return s.relation.toUpperCase() + "(_where_geom, GeomFromText('" + s.geometry + "'))" + spatial.join("GeomFromText('" + s.geometry + "')")
+	else
+		return s.relation.toUpperCase() + "(_where_geom, GeomFromGeoJSON('" + JSON.stringify(s.geometry) + "'))" + spatial.join("GeomFromGeoJSON('" + JSON.stringify(s.geometry) + "')")
+}
+
+
+
+function parseDistance(d, as) {
+	if (typeof d === "string")
+		return ", Distance(_where_geom,GeomFromText('" + d + "'),0) as " + as
+	else
+		return ", Distance(_where_geom,GeomFromGeoJSON('" + JSON.stringify(d) + "'),0) as " + as
+}
+
+function parseSort(sort, dataset) {
+	if (!sort.by)
+		throw "Error: missing value sort.by"
+	if (Object.keys(structure[dataset]).indexOf(sort.by.trim()) == -1 && sort.by.trim() != "where_distance")
+		throw "Error: sort by property '" + sort.trim() + "' doesn't exist"
+
+	return "`" + sort.by.trim() + "`" + (sort.desc === true ? " DESC" : "")
+}
+
+function parseProperties(properties, dataset) {
+	if (properties) {
+		var filter = "`" + properties.map((p) => {
+			if (Object.keys(structure[dataset]).indexOf(p) == -1)
+				throw "Error: property '" + p + "' doesn't exist"
+			return p
+		}).join("`, `") + "`"
+		return filter
+	} else {
+		return "`" + Object.keys(structure[dataset]).join("`, `") + "`"
+	}
+}
+
+function validateNumeric(value, property) {
+	if (isNaN(value))
+		throw "Error: value for '" + property + "' is not a number"
+	return value
+}
+
+function schedule() {
+	config.data.forEach((d) => {
+		if(d.schedule){
+			cron.schedule(d.schedule, function() {
+				var opt = {
+					db_name: config.db_name,
+					data_dir: config.data_dir,
+					dataset: d,
+					update: true
+				}
+				fork('db/db_update.js', [JSON.stringify(opt)]).on('message', (m) => {
+					structure[m.dataset] = m.schema
+					console.log(m.dataset + " updated at " + new Date().toISOString())
+				})
+			})
+		}
+	})
 }

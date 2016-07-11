@@ -1,18 +1,36 @@
 {
-	"db_restore": false,
 	"db_name": "db.db",
 
-	"data": {
-		"adressen": {
-			"url": "http://fidelio.local/sketches/temp/adressen.json",
-			"schedule": "* * 3 * * 3"
-		},
-		"baumkataster": {
-			"path": "baumkataster.json",
-			"schedule": "*/2 * * * * *"
+	"data": [{
+		"name": "KunstImStadtraum",
+		"url": "https://data.stadt-zuerich.ch/storage/f/kunst_im_stadtraum/KiS.json",
+		"schedule": "3 0 1 * *"
+	},{
+		"name": "baumkataster",
+		"url": "https://data.stadt-zuerich.ch/storage/f/baumkataster/baumkataster.json",
+		"schedule": "3 10 1 * *",
+		"schema": {
+			"Baumname_D": "TEXT",
+			"Baumname_LAT": "TEXT",
+			"Strasse": "TEXT",
+			"Baumnummer": "TEXT",
+			"Baumart_LAT": "TEXT",
+			"Pflanzjahr": "INT",
+			"Baumgattung": "TEXT"
 		}
-	},
+	}, {
+		"name": "velo",
+		"url": "https://data.stadt-zuerich.ch/storage/f/veloweg/veloweg.json",
+		"schedule": "3 20 1 * *"
+	}, {
+		"name": "statquart",
+		"path": "statquart.geojson"
+	}],
 	"data_dir": "data/",
-
-	"server_port": "33333"
+	"server_port": "33333",
+	"url": "http://localhost:33333",
+	"docs": {
+		"description": "Where2 turns static GeoJSON files into queryable APIs. This Demo allows you to query selected GeoJSON-files from <a href='https://data.stadt-zuerich.ch'>Open Data Zürich</a>. Look <a href='https://data.stadt-zuerich.ch'>here</a> to find out more on how to set up your own Where2-API with your datasets.",
+		"title": "Where2 Demo"
+	}
 }
