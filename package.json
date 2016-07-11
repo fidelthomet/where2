@@ -8,7 +8,7 @@
   },
   "version": "0.0.1",
   "dependencies": {
-    "spatialite" : "spatialite@zhm/node-spatialite#binaries",
+    "spatialite" : "zhm/node-spatialite#binaries",
     "node-cron": "1.1.1",
     "request": "2.72.0",
     "restify": "4.0.4"
