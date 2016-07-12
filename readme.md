@@ -37,7 +37,7 @@ All datasets are listed under `data`. To make a dataset available you need to de
 	"name": "addresses",
 	"url": "https://example.org/addresses.json"
 }
-``` 
+```
 or
 ```json
 {
@@ -91,15 +91,19 @@ Where2 automatically detects the schema of the GeoJSON feature properties based 
 	"db_name": "db.db"
 }
 ```
+
 ## Deploy Where2 on Heroku
-1. Fork this repository to your GitHub account
-2. Modify `config.json` to fit your needs
-3. Sign in to [Heroku](https://www.heroku.com)
-4. Create a new App
-5. Choose an App Name and Runtime Selection
-6. Under **Deployment Method** choose GitHub
-7. Connect Heroku with your GitHub Account
-8. Select the repository
-9. Under **Manual Deploy** choose your Branch and click on **Deploy Branch**
-10. Wait
-11. Done
+1. Sign in to [Heroku](https://www.heroku.com)
+2. Create a new App
+3. Choose an App Name and Runtime Selection
+
+4. Switch to [GitHub](https://github.com)
+5. Fork your own copy of Where2 to your account
+6. Select Branch "Heroku"[^Where2 depends on [node-spatialite](https://github.com/zhm/node-spatialite). To get it running on Heroku we have to use [the branch with compiled binaries](https://github.com/zhm/node-spatialite/tree/binaries)]
+7. Modify `config.json` to fit your needs
+
+8. Back on Heroku choose GitHub under **Deployment Method**
+9. Connect your GitHub Account with Heroku
+10. Select the repository
+11. Under **Manual Deploy** choose the Branch Heroku and click on **Deploy Branch**
+12. Wait
