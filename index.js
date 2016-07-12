@@ -84,7 +84,7 @@ function init_server() {
 		if (!req.params.query) {
 			res.contentType = 'text/html'
 			res.header('Content-Type', 'text/html')
-			res.end(ready ? docs.docs(structure, config.docs, config.url) : docs.launch())
+			res.end(ready ? docs.docs(structure, config.docs, config.host) : docs.launch())
 		} else {
 			try {
 				prepare_query(JSON.parse(req.params.query), res)
@@ -102,7 +102,7 @@ function init_server() {
 		if (!Object.keys(req.params).length === 0) {
 			res.contentType = 'text/html'
 			res.header('Content-Type', 'text/html')
-			res.end(ready ? docs.docs(structure, config.docs, config.url) : docs.launch())
+			res.end(ready ? docs.docs(structure, config.docs, config.host) : docs.launch())
 		} else {
 
 			try {

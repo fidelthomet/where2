@@ -1,6 +1,9 @@
 {
-	"db_name": "db.db",
-
+	"host": "https://where2demo.herokuapp.com",
+	"docs": {
+		"description": "Where2 turns static GeoJSON files into queryable APIs. This Demo allows you to query selected GeoJSON-files from <a href='https://data.stadt-zuerich.ch'>Open Data Zürich</a>. Look <a href='https://data.stadt-zuerich.ch'>here</a> to find out more on how to set up your own Where2-API with your datasets.",
+		"title": "Where2 Demo"
+	},
 	"data": [{
 		"name": "KunstImStadtraum",
 		"url": "https://data.stadt-zuerich.ch/storage/f/kunst_im_stadtraum/KiS.json",
@@ -26,11 +29,7 @@
 		"name": "statquart",
 		"path": "statquart.geojson"
 	}],
-	"data_dir": "data/",
 	"server_port": "33333",
-	"url": "https://where2demo.herokuapp.com",
-	"docs": {
-		"description": "Where2 turns static GeoJSON files into queryable APIs. This Demo allows you to query selected GeoJSON-files from <a href='https://data.stadt-zuerich.ch'>Open Data Zürich</a>. Look <a href='https://data.stadt-zuerich.ch'>here</a> to find out more on how to set up your own Where2-API with your datasets.",
-		"title": "Where2 Demo"
-	}
+	"data_dir": "data/",
+	"db_name": "db.db"
 }
