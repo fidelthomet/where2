@@ -1,7 +1,5 @@
 # Where2
 
-{{TOC}}
-
 ## Introduction
 
 Where2 turns static GeoJSON files into queryable APIs. Have a look at the [demo application](https://where2demo.herokuapp.com/) to see how it works.
