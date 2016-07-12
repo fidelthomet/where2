@@ -6,9 +6,9 @@ var fork = require('child_process').fork,
 
 	config = require('./config.json')
 
-var db, structure = {}
+var db, structure = {}, ready
 
-create_db()
+init_server()
 
 function create_db() {
 	fork('db/db_init.js').on('message', (m) => {
@@ -38,7 +38,8 @@ function create_table(i) {
 
 function init_db() {
 	db = new sqlite.Database(config.db_name, sqlite.OPEN_READONLY, function() {
-		init_server()
+		ready = true
+		console.log("ready")
 	})
 }
 
@@ -81,9 +82,9 @@ function init_server() {
 
 	server.get('/:query', (req, res) => {
 		if (!req.params.query) {
-			res.contentType = 'text/html';
-			res.header('Content-Type', 'text/html');
-			res.end(docs.docs(structure, config.docs, config.url))
+			res.contentType = 'text/html'
+			res.header('Content-Type', 'text/html')
+			res.end(ready ? docs.docs(structure, config.docs, config.url) : docs.launch())
 		} else {
 			try {
 				prepare_query(JSON.parse(req.params.query), res)
@@ -99,7 +100,9 @@ function init_server() {
 	server.use(restify.bodyParser())
 	server.post('/', (req, res) => {
 		if (!Object.keys(req.params).length === 0) {
-			res.send(docs.docs(structure, config.docs, config.url))
+			res.contentType = 'text/html'
+			res.header('Content-Type', 'text/html')
+			res.end(ready ? docs.docs(structure, config.docs, config.url) : docs.launch())
 		} else {
 
 			try {
@@ -115,6 +118,7 @@ function init_server() {
 
 	server.listen((process.env.PORT || config.server_port), function() {
 		console.log('where2 listening at port %s', (process.env.PORT || config.server_port))
+		create_db()
 	})
 }
 

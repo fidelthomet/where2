@@ -4,6 +4,10 @@ module.exports.docs = function(config, files, url) {
 	return docs(config, files, url)
 }
 
+module.exports.launch = function() {
+	return launch ? launch : ""
+}
+
 var html = "",
 	documentation = "",
 	css = "",
@@ -13,6 +17,11 @@ var html = "",
 fs.readFile("./docs/index.html", 'utf8', (err, f) => {
 	if (err) throw err
 	html = f
+})
+
+fs.readFile("./docs/launch.html", 'utf8', (err, f) => {
+	if (err) throw err
+	launch = f
 })
 
 fs.readFile("./docs/documentation.html", 'utf8', (err, f) => {
