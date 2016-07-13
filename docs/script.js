@@ -23,10 +23,10 @@ document.onreadystatechange = () => {
 
 	var map1 = L.map('map1', {
 		scrollWheelZoom: false
-	}).setView([47.3695, 8.5426], 13)
+	}).setView(snippets.map_center, snippets.map_zoom)
 	var map2 = L.map('map2', {
 		scrollWheelZoom: false
-	}).setView([47.3695, 8.5426], 13)
+	}).setView(snippets.map_center, snippets.map_zoom)
 
 	map1.sync(map2)
 	map2.sync(map1)
@@ -70,7 +70,7 @@ document.onreadystatechange = () => {
 	}))
 
 	var drawingLayer, geojsonLayer
-	
+
 	map1.on('draw:created', function(e) {
 		var type = e.layerType
 		drawingLayer = e.layer
