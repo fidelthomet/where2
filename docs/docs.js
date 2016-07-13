@@ -57,4 +57,5 @@ function docs(s, snippets, url) {
 		.replace("{{documentation}}", documentation)
 		.replace("{{css}}", css)
 		.replace("{{libs}}", libs)
+		.replace(/{{url}}/g, url)
 }

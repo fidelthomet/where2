@@ -27,7 +27,7 @@ To use your own datasets and to make the documentation work you have to do a few
 
 ### General Settings
 - Open config.json and change `host` to your hostname (eg: `http://localhost:33333` or `https://example.herokuapp.com`).
-- Under `docs` change `title` and `description` as you like.
+- Under `docs` change `title` and `description` as you like. Modify `map_center` and `map_zoom` to define the map view in the query-builder.
 
 ### Datasets
 All datasets are listed under `data`. To make a dataset available you need to define a `name` and an `url` (for hosted files) or a `path` (for files in the data directory).
