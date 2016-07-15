@@ -1,16 +1,13 @@
 {
-	"host": "https://where2demo.herokuapp.com",
+	"host": "https://mywhere2.herokuapp.com",
 	"docs": {
 		"description": "Where2 turns static GeoJSON files into queryable APIs. This Demo allows you to query selected GeoJSON-files from <a href='https://data.stadt-zuerich.ch'>Open Data Zürich</a>. Look <a href='https://github.com/fidelthomet/where2'>here</a> to find out more on how to set up your own Where2-API with your datasets.",
 		"title": "Where2 Demo",
-		"map_center": [47.3695, 8.5426],
+		"map_center": [9.965296811840306,53.546282983293459],
 		"map_zoom": 13
 	},
-	"data": [{
-		"name": "KunstImStadtraum",
-		"url": "https://data.stadt-zuerich.ch/storage/f/kunst_im_stadtraum/KiS.json",
-		"schedule": "3 0 1 * *"
-	},{
+	"data": [
+		{
 		"name": "baumkataster",
 		"url": "https://data.stadt-zuerich.ch/storage/f/baumkataster/baumkataster.json",
 		"schedule": "3 10 1 * *",
@@ -27,10 +24,8 @@
 		"name": "velo",
 		"url": "https://data.stadt-zuerich.ch/storage/f/veloweg/veloweg.json",
 		"schedule": "3 20 1 * *"
-	}, {
-		"name": "statquart",
-		"path": "statquart.geojson"
-	}],
+	}
+	],
 	"server_port": "33333",
 	"data_dir": "data/",
 	"db_name": "db.db"
