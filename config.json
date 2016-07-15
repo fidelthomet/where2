@@ -7,9 +7,15 @@
 		"map_zoom": 13
 	},
 	"data": [
-		{
-		"name": "baumkataster",
+	{
+		"name": "Hamburg - Strassenbaumkataster",
 		"url": "https://data.stadt-zuerich.ch/storage/f/baumkataster/baumkataster.json",
+
+		}
+	}
+		{
+		"name": "Zürich - Baumkataster",
+		"url": "https://statistik.stadt-zuerich.ch/modules/ogd_bspe/tests/baumkataster_DE/baumkataster_Hamburg2015.geojson",
 		"schedule": "3 10 1 * *",
 		"schema": {
 			"Baumname_D": "TEXT",
@@ -20,10 +26,6 @@
 			"Pflanzjahr": "INT",
 			"Baumgattung": "TEXT"
 		}
-	}, {
-		"name": "velo",
-		"url": "https://data.stadt-zuerich.ch/storage/f/veloweg/veloweg.json",
-		"schedule": "3 20 1 * *"
 	}
 	],
 	"server_port": "33333",
