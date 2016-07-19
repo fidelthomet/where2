@@ -130,11 +130,11 @@ document.onreadystatechange = function () {
 		if (d3.select("#cb-limit").node().checked) where.limit = d3.select(".in-limit").property("value");
 		if (d3.select("#cb-offset").node().checked) where.offset = d3.select(".in-offset").property("value");
 
-		d3.select("#req_URL").attr("href", url + "/" + encodeURIComponent(JSON.stringify(where))).text(url + "/" + encodeURIComponent(JSON.stringify(where)));
+		d3.select("#req_URL").attr("href", url + "/q/" + encodeURIComponent(JSON.stringify(where))).text(url + "/q/" + encodeURIComponent(JSON.stringify(where)));
 		d3.select("#req_body").text(JSON.stringify(where, null, "  "));
 		d3.select("#request").style("display", "block");
 
-		d3.request(url + "/").header("X-Requested-With", "XMLHttpRequest").header("Content-Type", "application/json").post(JSON.stringify(where), function (err, data) {
+		d3.request(url + "/q").header("X-Requested-With", "XMLHttpRequest").header("Content-Type", "application/json").post(JSON.stringify(where), function (err, data) {
 			if (err) throw err;
 
 			d3.select("#res_body").text(JSON.stringify(JSON.parse(data.response), null, "  "));

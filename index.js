@@ -1,3 +1,4 @@
+
 var fork = require('child_process').fork,
 	cron = require('node-cron'),
 	restify = require('restify'),
@@ -80,11 +81,13 @@ function init_server() {
 		}
 	})
 
-	server.get('/:query', (req, res) => {
+	server.get('/', (req, res) => {
+		getDocs(res)
+	})
+
+	server.get('/q/:query', (req, res) => {
 		if (!req.params.query) {
-			res.contentType = 'text/html'
-			res.header('Content-Type', 'text/html')
-			res.end(ready ? docs.docs(structure, config.docs, config.host) : docs.launch())
+			getDocs(res)
 		} else {
 			try {
 				prepare_query(JSON.parse(req.params.query), res)
@@ -98,11 +101,9 @@ function init_server() {
 	})
 
 	server.use(restify.bodyParser())
-	server.post('/', (req, res) => {
+	server.post('/q', (req, res) => {
 		if (!Object.keys(req.params).length === 0) {
-			res.contentType = 'text/html'
-			res.header('Content-Type', 'text/html')
-			res.end(ready ? docs.docs(structure, config.docs, config.host) : docs.launch())
+			getDocs(res)
 		} else {
 
 			try {
@@ -284,8 +285,6 @@ function parseSpatial(s, dataset) {
 		return s.relation.toUpperCase() + "(_where_geom, GeomFromGeoJSON('" + JSON.stringify(s.geometry) + "'))" + spatial.join("GeomFromGeoJSON('" + JSON.stringify(s.geometry) + "')")
 }
 
-
-
 function parseDistance(d, as) {
 	if (typeof d === "string")
 		return ", Distance(_where_geom,GeomFromText('" + d + "'),0) as " + as
@@ -338,4 +337,10 @@ function schedule() {
 			})
 		}
 	})
+}
+
+function getDocs(res) {
+	res.contentType = 'text/html'
+	res.header('Content-Type', 'text/html')
+	res.end(ready ? docs.docs(structure, config.docs, config.host) : docs.launch())
 }

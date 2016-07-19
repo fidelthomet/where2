@@ -107,3 +107,7 @@ Where2 automatically detects the schema of the GeoJSON feature properties based 
 10. Select the repository
 11. Under **Manual Deploy** choose the Branch Heroku and click on **Deploy Branch**
 12. Wait
+
+## Licence
+Copyright 2016 Fidel Thomet
+Licensed under the [MIT License](http://opensource.org/licenses/MIT).
