@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js"
   },
-  "version": "0.0.1",
+  "version": "0.0.2",
   "dependencies": {
     "spatialite" : "0.0.6",
     "node-cron": "1.1.1",
