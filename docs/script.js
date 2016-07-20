@@ -131,6 +131,7 @@ document.onreadystatechange = function () {
 		if (d3.select("#cb-offset").node().checked) where.offset = d3.select(".in-offset").property("value");
 
 		d3.select("#req_URL").attr("href", url + "/q/" + encodeURIComponent(JSON.stringify(where))).text(url + "/q/" + encodeURIComponent(JSON.stringify(where)));
+		d3.select("#map_URL").attr("href", url + "/map/" + encodeURIComponent(JSON.stringify(where))).text(url + "/map/" + encodeURIComponent(JSON.stringify(where)));
 		d3.select("#req_body").text(JSON.stringify(where, null, "  "));
 		d3.select("#request").style("display", "block");
 

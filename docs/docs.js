@@ -8,11 +8,16 @@ module.exports.launch = function() {
 	return launch ? launch : ""
 }
 
+module.exports.map = function(q, url) {
+	return map(q, url)
+}
+
 var html = "",
 	documentation = "",
 	css = "",
 	libs = "",
-	script = ""
+	script = "",
+	mapHtml = ""
 
 fs.readFile("./docs/index.html", 'utf8', (err, f) => {
 	if (err) throw err
@@ -44,6 +49,11 @@ fs.readFile("./docs/script.js", 'utf8', (err, f) => {
 	script = f
 })
 
+fs.readFile("./docs/map.html", 'utf8', (err, f) => {
+	if (err) throw err
+	mapHtml = f
+})
+
 function docs(s, snippets, url) {
 	var availableDatasets = Object.keys(s).map(d => {
 		return d + ' <span class="blue" onclick="$(\'#table-' + d + '\').toggle()">properties</span>' +
@@ -58,4 +68,8 @@ function docs(s, snippets, url) {
 		.replace("{{css}}", css)
 		.replace("{{libs}}", libs)
 		.replace(/{{url}}/g, url)
+}
+
+function map(q, url) {
+	return mapHtml.replace("{{variables}}", "var q = "+ JSON.stringify(q)+", url = '"+ url+"'").replace("{{libs}}", libs).replace("{{css}}", css)
 }

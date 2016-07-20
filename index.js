@@ -86,9 +86,6 @@ function init_server() {
 	})
 
 	server.get('/q/:query', (req, res) => {
-		if (!req.params.query) {
-			getDocs(res)
-		} else {
 			try {
 				prepare_query(JSON.parse(req.params.query), res)
 			} catch (e) {
@@ -96,16 +93,15 @@ function init_server() {
 					error: 'malformed request'
 				})
 			}
-
-		}
 	})
+
+	server.get('/map/:query', (req, res) => {
+		getMap(JSON.parse(req.params.query), res)
+	})
+
 
 	server.use(restify.bodyParser())
 	server.post('/q', (req, res) => {
-		if (!Object.keys(req.params).length === 0) {
-			getDocs(res)
-		} else {
-
 			try {
 				prepare_query(req.params, res)
 			} catch (e) {
@@ -113,8 +109,6 @@ function init_server() {
 					error: 'malformed request'
 				})
 			}
-
-		}
 	})
 
 	server.listen((process.env.PORT || config.server_port), function() {
@@ -343,4 +337,10 @@ function getDocs(res) {
 	res.contentType = 'text/html'
 	res.header('Content-Type', 'text/html')
 	res.end(ready ? docs.docs(structure, config.docs, config.host) : docs.launch())
+}
+
+function getMap(q, res) {
+	res.contentType = 'text/html'
+	res.header('Content-Type', 'text/html')
+	res.end(ready ? docs.map(q, config.host) : docs.launch())
 }

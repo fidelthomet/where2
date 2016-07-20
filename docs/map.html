@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Where2 map</title>
+	<link href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAABKxJREFUeAHtWk2IHEUUfm8yC4bgVVhh3YOQDXj0IhLFn5NiSEBBox7MbHLSCNGTp8xB40kENULI7nqRBMFAEiU5aYIGQcGbi7sqiEYT8CYRoyZs+X090+xk7Jl63fO6F0kV9E511ffe997X9dezI5JKUiApkBRICiQFkgJJgaTAzamANpV2txtax36We8G3S4PcLSq3o86L5ZIEuRRUvkb95NN3yBfdrq5lPTX/qV2AB7rhlss/yYtB5GXkcpsxn98Q2BvTs/LW+a7+ZbSpBKtVgG2d8PhakDcR2Uyl6EQutlQOrCzpiYr2UbNWFFEBEELQrZ3wGpL/EOZVkyfzDH3QF31WCCVq4u6UgW7ryHEM+Sej7CUACPSDlSXZrYoVxLG4j4C5eXnVO3nmS5/07Zh75sp1BPTnPId9bQVrwhOea4LbCOBq31/wakuejslBLi8SNwG41SGoSRY8a04zfS4rfizORQAecjBHuc9bSsAh6Ghb5J6pzXIrL9bZBmPTAkcuclrIYhiXNQDb1HaE/nmUTOWytOTZ1QX9tAg7tzc8JGvyfggyXdR/Q5vKfd8t6YUb2ircuKgI3l0G7jAuedpnwkAgVC0jwcIZDctFgOxsH6NSWRj15AdNMwywg21FdRNnkeFQm4sAmL/5S82Q+/XbdpDF9bvxNRPWwDmepdfrI8D6W91ITt0syyM7hzqM2KjoQ24Lb70EKHT+f2j0EuDXWLLhqtwVw+T9JmyQX3L8JJ8uAmDJ/jIWxHWV+Rgm77dg8W74VY6f5NNFAKzI56NBBNmb7fMRYIYBNgLDjirnYhhLv4sA7ZacUpVrEULlIWecCPlBCH7GHtDItUnldITP1D2WyOShD8Jp8CMcXx4z2PAovMCtLl/tOeezYd978vGYVD7GKXCHgSsKwTHcp+Bl4Ai+xbQIoBBq33WRfXJ1gNty9uvDyTVgOVHVZQowgqdm5QyG5o8TRWMwJge5DFATJD7cTG56IEyD5/F03ylhUh6q8gKG/+HyhsUWbiOA7u/cgjO8+uzPheHCd8ZR2Fmt0VWAs2/r3xDg9WqhGKzgO+MwQK0QVwFIOjVT0yjA0898WzMz4twFWO7qPzgYHTLym2H0Sd9mAyPQXQDyTs/KUayuK8YYojD6os8osALAdRcY5MeO8Ah2BJ/tSuVRrPxnB/171WsZAQyOAWPP9gj6TF3JM87aBKBzlAM8t/eq5f/SFtdL5S3tFrUKsLqkq0ig8sGItvRhT6c8slYBGA6+4j5Y6XCEbS+zLZ9TKYvaBcATvAIB9peKimDYZLalDcsZ1LYLDIcxtyecxAvfzuH2onsEdWr1PXX53r/I/2Bb7SMgJ8O/wPZjTv+R34/6JIbYUf3e7Y0J8M27ehHJvRJLgBhiYziv/samAAPOfj0yL59hcdtelACSv7CyKPd7/wqkiCtva2wEkJCJtaakg0T/zAPIP9nWVtnTZPLkblQAEn57RL/HEfm/UwFty4v6AzFNlkanQJ5Yfyp8gqnwINvw9M9h6D/c9NMnd+MjoJewhnZbnsNe/zsv1jciecayoWWuE57htaFBJPKkQFIgKZAUSAokBZICSYGbVIF/AbQqM1TlDR0tAAAAAElFTkSuQmCC" rel="icon" type="image/png" />
+	<link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" rel="stylesheet">
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js"></script>
+	<script type="text/javascript">{{libs}}</script>
+  <style type="text/css">{{css}}</style>
+  <style type="text/css">#map{position: absolute; top: 0px; left: 0px; height: 100%; width: 100%}</style>
+</head>
+<body>
+	<div id="map">
+
+	</div>
+  <script>
+    {{variables}}
+    var map = L.map('map'), geojsonLayer
+    map.addLayer(L.tileLayer('http://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+      subdomains: 'abcd',
+      minZoom: 0,
+      maxZoom: 18
+    }))
+    d3.request(url + "/q").header("X-Requested-With", "XMLHttpRequest").header("Content-Type", "application/json").post(JSON.stringify(q), function (err, data) {
+      if (err) throw err;
+
+      d3.select("#res_body").text(JSON.stringify(JSON.parse(data.response), null, "  "));
+      geojsonLayer = L.geoJson(JSON.parse(data.response), {
+        onEachFeature: function onEachFeature(feature, layer) {
+          layer.bindPopup("<table>" + Object.keys(feature.properties).map(function (k) {
+            return "<tr><td>" + k + "</td><td>" + feature.properties[k] + "</td></tr>";
+          }).join("") + "</table>");
+        }
+      });
+      map.fitBounds(geojsonLayer.getBounds());
+      geojsonLayer.addTo(map);
+    });
+  </script>
+</body>
+</html>
