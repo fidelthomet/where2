@@ -89,7 +89,7 @@ label {
 input.in-spatial, #request, #query-builder, #documentation{
 	display: none;
 }
-#req_URL{
+#req_URL, #map_URL{
 	word-wrap: break-word;
 }
 #res_body{
