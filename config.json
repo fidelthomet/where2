@@ -8,7 +8,7 @@
 	},
 	"data": [{
 		"name": "KunstImStadtraum",
-		"url": "https://data.stadt-zuerich.ch/dataset/kunst_im_stadtraum/resource/3e42de5e-b098-4b61-a965-b32f3439b4b7/download/kis.json",
+		"url": "https://data.stadt-zuerich.ch/dataset/kunst_im_stadtraum/resource/326a42f8-749f-4623-a2a1-1818a26e92b6/download/kunstimstadtraum.json",
 		"schedule": "3 0 1 * *"
 	},{
 		"name": "baumkataster",
