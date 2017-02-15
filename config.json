@@ -25,7 +25,7 @@
 		}
 	}, {
 		"name": "velo",
-		"url": "https://data.stadt-zuerich.ch/dataset/veloweg/resource/5f6c2689-824c-4c11-972f-bb5736b342be/download/veloweg.json",
+		"url": "https://data.stadt-zuerich.ch/dataset/79f3b2d4-e952-45d9-9f90-e57ab1ea0abe/resource/90390648-4973-4505-8f84-56b5afc9fc13/download/veloweg.json",
 		"schedule": "3 20 1 * *"
 	}, {
 		"name": "statquart",
