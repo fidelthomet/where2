@@ -11,7 +11,7 @@ Where2 is a Node.js based application, which creates APIs from GeoJSON files. Wh
 The [demo application](https://where2demo.herokuapp.com/) allows you to query data from Zurich's Open Data Catalogue. Follow these instructions to set up your own instance of Where2 with datasets of your own choosing.
 
 ### Prerequisites
-**Where2** requieres Node.js. If you don’t have it yet, go download and install [Node.js](https://nodejs.org/en/download/).
+**Where2** requieres Node.js. If you don’t have it yet, go download and install [Node.js](https://nodejs.org/en/download/). Also make sure [SpatialLite is installed](https://www.npmjs.com/package/spatialite). 
 
 ### Installing
 Grab a copy of **Where2**, open your Terminal (or other Command Line Interface), `cd` into the directory and install the dependencies using npm:
