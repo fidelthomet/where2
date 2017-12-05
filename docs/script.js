@@ -60,13 +60,13 @@ document.onreadystatechange = function () {
 
 	map1.addControl(drawControl);
 
-	map1.addLayer(L.tileLayer('http://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png', {
+	map1.addLayer(L.tileLayer('http://a.tile.stamen.com/toner/${z}/${x}/${y}.png', {
 		attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
 		subdomains: 'abcd',
 		minZoom: 0,
 		maxZoom: 18
 	}));
-	map2.addLayer(L.tileLayer('http://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png', {
+	map2.addLayer(L.tileLayer('http://a.tile.stamen.com/toner/${z}/${x}/${y}.png', {
 		attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
 		subdomains: 'abcd',
 		minZoom: 0,
